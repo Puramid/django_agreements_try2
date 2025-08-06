@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}{{ object|default:"Новый объект" }}{% endblock %}
+{% block content %}
+<div class="container mt-5" style="max-width:600px;">
+  <h3 class="mb-4">{{ object|default:"Новый объект" }}</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary me-2">Сохранить</button>
+    <a href="{% url 'deals:dashboard' %}" class="btn btn-secondary">Отмена</a>
+  </form>
+</div>
+{% endblock %}
