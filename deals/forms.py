@@ -1,3 +1,4 @@
+# deals/forms.py
 from django import forms
 from .models import Agreement, Portfolio
 
@@ -24,7 +25,6 @@ class PortfolioForm(forms.ModelForm):
     class Meta:
         model = Portfolio
         fields = [
-            'label',
             'type',
             'process_type',
             'total_sum',

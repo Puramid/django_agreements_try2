@@ -1,6 +1,9 @@
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, CreateView, UpdateView
+from django.views.generic import (
+    TemplateView, CreateView, UpdateView, DeleteView
+)
+from django.contrib import messages
 from .models import Agreement, Portfolio
 from .forms import AgreementForm, PortfolioForm
 
@@ -11,7 +14,6 @@ class DashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['agreements'] = Agreement.objects.select_related('creditor').all().order_by('-id')
-
         aid = self.request.GET.get('agreement')
         if aid and aid.isdigit():
             ctx['current_agreement'] = Agreement.objects.filter(pk=aid).first()
@@ -32,6 +34,16 @@ class AgreementUpdateView(UpdateView):
     form_class = AgreementForm
     template_name = 'deals/generic_form.html'
     success_url = reverse_lazy('deals:dashboard')
+
+
+class AgreementDeleteView(DeleteView):
+    model = Agreement
+    template_name = 'deals/generic_confirm_delete.html'
+    success_url = reverse_lazy('deals:dashboard')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, f"Договор №{self.get_object().id} удалён.")
+        return super().delete(request, *args, **kwargs)
 
 
 class PortfolioCreateView(CreateView):
@@ -64,3 +76,18 @@ class PortfolioUpdateView(UpdateView):
             reverse_lazy('deals:dashboard'),
             self.object.agreement.pk
         )
+
+
+class PortfolioDeleteView(DeleteView):
+    model = Portfolio
+    template_name = 'deals/generic_confirm_delete.html'
+
+    def get_success_url(self):
+        return "{}?agreement={}".format(
+            reverse_lazy('deals:dashboard'),
+            self.object.agreement.pk
+        )
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, f"Портфель «{self.get_object().label}» удалён.")
+        return super().delete(request, *args, **kwargs)

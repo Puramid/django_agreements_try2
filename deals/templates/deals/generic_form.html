@@ -1,12 +1,21 @@
 {% extends 'base.html' %}
-{% block title %}{{ object|default:"Новый объект" }}{% endblock %}
+{% block title %}{{ view.object|default:"Новый" }}{% endblock %}
 {% block content %}
 <div class="container mt-5" style="max-width:600px;">
-  <h3 class="mb-4">{{ object|default:"Новый объект" }}</h3>
+  <h3 class="mb-4">{{ view.object|default:"Новый объект" }}</h3>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit" class="btn btn-primary me-2">Сохранить</button>
+    {% if view.object %}
+      <a href="
+        {% if 'agreement' in request.path %}
+          {% url 'deals:agreement-delete' view.object.pk %}
+        {% else %}
+          {% url 'deals:portfolio-delete' view.object.pk %}
+        {% endif %}
+      " class="btn btn-outline-danger me-2">Удалить</a>
+    {% endif %}
     <a href="{% url 'deals:dashboard' %}" class="btn btn-secondary">Отмена</a>
   </form>
 </div>

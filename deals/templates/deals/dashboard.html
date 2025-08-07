@@ -3,7 +3,6 @@
 {% block title %}ECOI{% endblock %}
 {% block content %}
 <style>
-  /* делаем строку таблицы кликабельной */
   .clickable-row {
       cursor: pointer;
       position: relative;
@@ -14,7 +13,6 @@
       left: 0; top: 0; right: 0; bottom: 0;
   }
 
-  /* делаем карточку кликабельной */
   .clickable-card {
       position: relative;
       cursor: pointer;
@@ -25,7 +23,7 @@
       left: 0; top: 0; right: 0; bottom: 0;
       z-index: 1;
   }
-  /* кнопка «✎» должна остаться поверх ссылки */
+
   .edit-btn {
       position: relative;
       z-index: 2;
@@ -48,7 +46,7 @@
       </thead>
       <tbody>
       {% for a in agreements %}
-        <tr class="clickable-row">
+        <tr class="clickable-row {% if current_agreement and a.id == current_agreement.id %}table-primary{% endif %}">
           <td><a href="?agreement={{ a.id }}">{{ a.id }}</a></td>
           <td><a href="?agreement={{ a.id }}">{{ a.agreement_code }}</a></td>
           <td><a href="?agreement={{ a.id }}">{{ a.agreement_date|date:"d.m.Y" }}</a></td>

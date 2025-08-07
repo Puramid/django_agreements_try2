@@ -30,8 +30,6 @@ class Creditor(models.Model):
         return self.name
 
 
-
-
 class AgreementTypes(models.IntegerChoices):
     """
     Типы договоров.
@@ -137,7 +135,7 @@ class Agreement(models.Model):
     )
 
     class Meta:
-        app_label = "deals"        
+        app_label = "deals"
         db_table = "agreement"
         verbose_name = "Договор"
         verbose_name_plural = "Договор"
@@ -168,8 +166,8 @@ class Portfolio(models.Model):
     label = models.CharField(
         "Наименование",
         max_length=250,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
     )
 
     type = models.PositiveSmallIntegerField(
@@ -191,7 +189,7 @@ class Portfolio(models.Model):
         null=False,
         blank=False,
         default=1,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     total_sum = models.DecimalField(
@@ -224,12 +222,15 @@ class Portfolio(models.Model):
     # objects = PortfolioManager()  # при необходимости раскомментируйте
 
     class Meta:
-        app_label = "deals"        
+        app_label = "deals"
         db_table = "credit_portfolio"
         verbose_name = "портфель"
         verbose_name_plural = "Портфель"
 
     def __str__(self):
-        return self.label
-    
- 
+        return self.label or "Без названия"
+
+    def save(self, *args, **kwargs):
+        if not self.label:
+            self.label = f"{self.agreement.creditor}_{self.agreement.get_agreement_type_display()}_{self.date_placement.strftime('%d.%m.%Y')}_{self.get_process_type_display()}"
+        super().save(*args, **kwargs)
