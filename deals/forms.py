@@ -22,9 +22,20 @@ class AgreementForm(forms.ModelForm):
 
 
 class PortfolioForm(forms.ModelForm):
+    label_preview = forms.CharField(
+        label='Имя портфеля (итог)',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'readonly': 'readonly',
+            'class': 'form-control-plaintext',
+            'id': 'id_label_preview',
+        })
+    )
+
     class Meta:
         model = Portfolio
         fields = [
+            'label_preview',
             'type',
             'process_type',
             'total_sum',
@@ -37,3 +48,7 @@ class PortfolioForm(forms.ModelForm):
             'date_finish': forms.DateInput(attrs={'type': 'date'}),
             'cession_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def __init__(self, *args, agreement=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.agreement = agreement

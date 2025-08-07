@@ -1,8 +1,6 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import (
-    TemplateView, CreateView, UpdateView, DeleteView
-)
+from django.views.generic import TemplateView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from .models import Agreement, Portfolio
 from .forms import AgreementForm, PortfolioForm
@@ -11,9 +9,35 @@ from .forms import AgreementForm, PortfolioForm
 class DashboardView(TemplateView):
     template_name = 'deals/dashboard.html'
 
+    def get(self, request, *args, **kwargs):
+        if not request.GET.get('agreement'):
+            first = Agreement.objects.order_by('-id').first()
+            if first:
+                return redirect(f"{reverse_lazy('deals:dashboard')}?agreement={first.pk}")
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['agreements'] = Agreement.objects.select_related('creditor').all().order_by('-id')
+
+        # параметры сортировки
+        sort = self.request.GET.get('sort', 'id')
+        direction = self.request.GET.get('dir', 'desc')
+
+        allowed = {'id', 'agreement_code', 'agreement_date', 'total_sum'}
+        if sort == 'creditor':
+            order = f"{'-' if direction == 'desc' else ''}creditor__name"
+        elif sort == 'agreement_type':
+            order = f"{'-' if direction == 'desc' else ''}agreement_type"
+        elif sort in allowed:
+            order = f"{'-' if direction == 'desc' else ''}{sort}"
+        else:
+            order = '-id'
+
+        ctx['agreements'] = Agreement.objects.select_related('creditor').order_by(order)
+        ctx['current_sort'] = sort
+        ctx['current_dir'] = direction
+        ctx['rev_dir'] = 'desc' if direction == 'asc' else 'asc'
+
         aid = self.request.GET.get('agreement')
         if aid and aid.isdigit():
             ctx['current_agreement'] = Agreement.objects.filter(pk=aid).first()

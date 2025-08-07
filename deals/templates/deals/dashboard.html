@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load query_transform %}
+
 {% block title %}ECOI{% endblock %}
+
 {% block content %}
 <style>
   .clickable-row {
@@ -28,6 +31,10 @@
       position: relative;
       z-index: 2;
   }
+
+  .sort-col a { text-decoration: none; color: inherit; }
+  .sort-col.asc  a::after  { content: " ▲"; }
+  .sort-col.desc a::after  { content: " ▼"; }
 </style>
 
 <div class="d-flex gap-3" style="min-height:100vh;">
@@ -41,18 +48,36 @@
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th>ID</th><th>Код</th><th>Дата</th><th>Тип</th><th>Кредитор</th><th>Сумма</th><th style="width:76px;"></th>
+          <th class="sort-col {% if current_sort == 'id' %}{{ current_dir }}{% endif %}">
+            <a href="?{% query_transform sort='id' dir=rev_dir agreement=request.GET.agreement %}">ID</a>
+          </th>
+          <th class="sort-col {% if current_sort == 'agreement_code' %}{{ current_dir }}{% endif %}">
+            <a href="?{% query_transform sort='agreement_code' dir=rev_dir agreement=request.GET.agreement %}">Код</a>
+          </th>
+          <th class="sort-col {% if current_sort == 'agreement_date' %}{{ current_dir }}{% endif %}">
+            <a href="?{% query_transform sort='agreement_date' dir=rev_dir agreement=request.GET.agreement %}">Дата</a>
+          </th>
+          <th class="sort-col {% if current_sort == 'agreement_type' %}{{ current_dir }}{% endif %}">
+            <a href="?{% query_transform sort='agreement_type' dir=rev_dir agreement=request.GET.agreement %}">Тип</a>
+          </th>
+          <th class="sort-col {% if current_sort == 'creditor' %}{{ current_dir }}{% endif %}">
+            <a href="?{% query_transform sort='creditor' dir=rev_dir agreement=request.GET.agreement %}">Кредитор</a>
+          </th>
+          <th class="sort-col {% if current_sort == 'total_sum' %}{{ current_dir }}{% endif %}">
+            <a href="?{% query_transform sort='total_sum' dir=rev_dir agreement=request.GET.agreement %}">Сумма</a>
+          </th>
+          <th style="width:76px;"></th>
         </tr>
       </thead>
       <tbody>
       {% for a in agreements %}
         <tr class="clickable-row {% if current_agreement and a.id == current_agreement.id %}table-primary{% endif %}">
-          <td><a href="?agreement={{ a.id }}">{{ a.id }}</a></td>
-          <td><a href="?agreement={{ a.id }}">{{ a.agreement_code }}</a></td>
-          <td><a href="?agreement={{ a.id }}">{{ a.agreement_date|date:"d.m.Y" }}</a></td>
-          <td><a href="?agreement={{ a.id }}">{{ a.get_agreement_type_display }}</a></td>
-          <td><a href="?agreement={{ a.id }}">{{ a.creditor }}</a></td>
-          <td><a href="?agreement={{ a.id }}">{{ a.total_sum|floatformat:2 }}</a></td>
+          <td><a href="?{% query_transform agreement=a.id %}">{{ a.id }}</a></td>
+          <td><a href="?{% query_transform agreement=a.id %}">{{ a.agreement_code }}</a></td>
+          <td><a href="?{% query_transform agreement=a.id %}">{{ a.agreement_date|date:"d.m.Y" }}</a></td>
+          <td><a href="?{% query_transform agreement=a.id %}">{{ a.get_agreement_type_display }}</a></td>
+          <td><a href="?{% query_transform agreement=a.id %}">{{ a.creditor }}</a></td>
+          <td><a href="?{% query_transform agreement=a.id %}">{{ a.total_sum|floatformat:2 }}</a></td>
           <td>
             <a class="btn btn-sm btn-outline-secondary edit-btn" href="{% url 'deals:agreement-edit' a.pk %}">✎</a>
           </td>
@@ -64,7 +89,7 @@
     </table>
   </div>
 
-  <!-- ПРАВАЯ ПАНЕЛЬ -->
+  <!-- ПРАВАЯ ПАНЕЛЬ: портфели -->
   <div class="flex-fill bg-white rounded shadow-sm p-3" style="overflow:auto;">
     {% if current_agreement %}
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -97,4 +122,5 @@
     {% endif %}
   </div>
 </div>
+
 {% endblock %}

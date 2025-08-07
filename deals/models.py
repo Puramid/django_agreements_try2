@@ -15,7 +15,6 @@ class Creditor(models.Model):
         "Тип кредитора", null=False, blank=False, choices=CreditorType.choices
     )
     name = models.CharField("Наименование", max_length=250, null=False, blank=False)
-    # details = models.OneToOneField('common.CompanyDetails', null=False, blank=False, related_name='creditor_details', on_delete=models.PROTECT)
 
     date_add = models.DateTimeField("Дата создания", default=timezone.now)
     date_update = models.DateTimeField("Дата обновления", auto_now=True)
@@ -31,33 +30,25 @@ class Creditor(models.Model):
 
 
 class AgreementTypes(models.IntegerChoices):
-    """
-    Типы договоров.
-    """
     CESS = 1, "Цессия"
     OUTS = 2, "Аутсорсинг"
 
 
 class PortfolioTypes(models.IntegerChoices):
-    """
-    Типы портфелей.
-    """
     CESS = 1, "Цессия"
-    # Добавьте дополнительные варианты при необходимости
 
 
 class PortfolioProcessTypes(models.IntegerChoices):
-    """
-    Типы работ по портфелю.
-    """
-    LEGAL = 1, "Юридический"
-    # Добавьте дополнительные варианты при необходимости
+    LEGAL = 1, "Лигал"
+    IP = 2, "ИП"
+    HARD = 3, "Хард"
+    SOFT = 4, "Софт"
+    SEIZE = 5, "Изъятие"
+    BANKRUPT = 6, "Банкротство"
+    FULL = 7, "Фулл"
 
 
 class Agreement(models.Model):
-    """
-    Договор (Agreement).
-    """
     id = models.AutoField(primary_key=True)
 
     creditor = models.ForeignKey(
@@ -121,14 +112,11 @@ class Agreement(models.Model):
         blank=False,
     )
 
-    # Пример кастомного хранилища закомментирован
-    # from .storage import EcoiFileStorage
     def agreement_doc_path(self, filename):
         return f"agreements/{self.agreement_code}/{filename}"
 
     agreement_doc = models.FileField(
         verbose_name="Документ",
-        # storage=EcoiFileStorage(),  # при необходимости раскомментируйте
         upload_to=agreement_doc_path,
         max_length=1024,
         null=True,
@@ -145,9 +133,6 @@ class Agreement(models.Model):
 
 
 class Portfolio(models.Model):
-    """
-    Портфель (Portfolio), связанный с договором.
-    """
     id = models.AutoField(
         unique=True,
         primary_key=True,
@@ -219,8 +204,6 @@ class Portfolio(models.Model):
         blank=True,
     )
 
-    # objects = PortfolioManager()  # при необходимости раскомментируйте
-
     class Meta:
         app_label = "deals"
         db_table = "credit_portfolio"
@@ -232,5 +215,10 @@ class Portfolio(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.label:
-            self.label = f"{self.agreement.creditor}_{self.agreement.get_agreement_type_display()}_{self.date_placement.strftime('%d.%m.%Y')}_{self.get_process_type_display()}"
+            self.label = (
+                f"{self.agreement.creditor}_"
+                f"{self.agreement.get_agreement_type_display()}_"
+                f"{self.date_placement.strftime('%d.%m.%Y')}_"
+                f"{self.get_process_type_display()}"
+            )
         super().save(*args, **kwargs)
