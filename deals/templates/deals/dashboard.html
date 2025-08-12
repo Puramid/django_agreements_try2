@@ -24,7 +24,6 @@
           <div class="agreement-info">
             <div class="agreement-code">{{ a.agreement_code }}</div>
             <div class="agreement-meta">
-              <!-- Добавлен ID договора левее кредитора -->
               <span class="agreement-id">ID: {{ a.id }}</span>
               <span class="creditor-name">{{ a.creditor }}</span>
               <span>{{ a.agreement_date|date:"d.m.Y" }}</span>
@@ -84,7 +83,8 @@
   <!-- Правая панель: Портфели -->
   <div class="portfolios-panel">
     <div class="panel-header">
-      <h3>Портфели по договору №{{ current_agreement.id|default:"" }}</h3>
+      <!-- Изменено: вместо номера договора отображаем код договора -->
+      <h3>Портфели по договору {% if current_agreement %}({{ current_agreement.agreement_code }}){% else %}(не выбран){% endif %}</h3>
       {% if current_agreement %}
       <a href="{% url 'deals:portfolio-new' current_agreement.id %}" class="btn btn-primary btn-sm">+ Портфель</a>
       {% endif %}
