@@ -24,12 +24,11 @@
           <div class="agreement-info">
             <div class="agreement-code">{{ a.agreement_code }}</div>
             <div class="agreement-meta">
+              <span class="creditor-name">{{ a.creditor }}</span>
               <span>{{ a.agreement_date|date:"d.m.Y" }}</span>
               <span>{{ a.get_agreement_type_display }}</span>
-              <span>{{ a.creditor }}</span>
-              <!-- Добавляем сумму и стоимость портфеля -->
-              <span>Сумма: {{ a.total_sum|currency_format }}</span>
-              <span>Стоимость: {{ a.total_amount|currency_format }}</span>
+              <span class="financial-info">Сумма: {{ a.total_sum|currency_format }}</span>
+              <span class="financial-info">Стоимость: {{ a.total_amount|currency_format }}</span>
             </div>
           </div>
           <div class="agreement-actions">

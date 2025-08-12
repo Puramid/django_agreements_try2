@@ -1,216 +1,170 @@
 {% extends 'base.html' %} 
 {% load humanize %} 
-
 {% block title %}{{ view.object|default:"Новый объект" }}{% endblock %} 
-
 {% block content %} 
-<div class="form-container">
-  <div class="form-header">
-    {% if view.object %} 
-      {% if view.object.agreement_code %} 
-        <h2>Редактирование договора №{{ view.object.id }}</h2> 
-      {% else %} 
-        <h2>Редактирование портфеля: {{ view.object.label|default:"Без названия" }}</h2> 
-      {% endif %} 
-    {% else %} 
-      {% if 'agreement' in request.path %} 
-        <h2>Новый договор</h2> 
-      {% else %} 
-        <h2>Новый портфель</h2> 
-      {% endif %} 
-    {% endif %} 
-  </div>
-
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %} 
-    
-    {# --- read-only "итоговое" имя портфеля (для PortfolioForm) --- #} 
-    {% if form.label_preview %} 
-      <div class="form-group">
-        <div class="form-label">{{ form.label_preview.label }}</div>
-        <div class="form-value">{{ form.label_preview }}</div>
-      </div>
-    {% endif %} 
-    
-    {# --- остальные поля формы --- #} 
-    {% for field in form %} 
-      {% if field.name != 'label_preview' %} 
-        <div class="form-group">
-          <div class="form-label">{{ field.label }}</div> 
-          
-          {% if field.name == 'total_sum' or field.name == 'total_amount' %} 
-            <div class="form-value-with-currency">
-              {{ field }} 
-              <span class="currency-symbol">₽</span>
-            </div>
-          {% else %} 
-            <div class="form-value">{{ field }}</div> 
-          {% endif %} 
-          
-          {% if field.help_text %} 
-            <div class="form-help">{{ field.help_text }}</div>
-          {% endif %} 
-          
-          {% if field.errors %} 
-            <div class="form-errors">{{ field.errors|join:", " }}</div>
-          {% endif %} 
-          
-          {# Показываем текущее значение для дат при редактировании #} 
-          {% if view.object and field.name in 'date_placement,date_finish,cession_date,agreement_date' %} 
-            <div class="form-current-value">
-              Текущее значение: 
-              {% if field.name == 'agreement_date' and view.object.agreement_date %} 
-                {{ view.object.agreement_date|date:"d.m.Y H:i" }} 
-              {% elif field.name == 'date_placement' and view.object.date_placement %} 
-                {{ view.object.date_placement|date:"d.m.Y" }} 
-              {% elif field.name == 'date_finish' and view.object.date_finish %} 
-                {{ view.object.date_finish|date:"d.m.Y" }} 
-              {% elif field.name == 'cession_date' and view.object.cession_date %} 
-                {{ view.object.cession_date|date:"d.m.Y" }} 
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card">
+        <div class="card-header">
+          <h4>
+            {% if view.object %} 
+              {% if view.object.agreement_code %} 
+                Редактирование договора №{{ view.object.id }} 
+              {% else %} 
+                Редактирование портфеля: <span id="portfolio-label-preview" 
+                  data-creditor="{{ view.object.agreement.creditor }}"
+                  data-agreement-type="{{ view.object.agreement.get_agreement_type_display }}"
+                  data-date-placement="{{ view.object.date_placement|date:'Y-m-d' }}"
+                  data-process-type="{{ view.object.get_process_type_display }}">{{ view.object.label|default:"Без названия" }}</span> 
+              {% endif %} 
+            {% else %} 
+              {% if 'agreement' in request.path %} 
+                Новый договор 
+              {% else %} 
+                Новый портфель: <span id="portfolio-label-preview">Без названия</span> 
+              {% endif %} 
+            {% endif %}
+          </h4>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" id="portfolio-form">
+            {% csrf_token %} 
+            {# --- остальные поля формы --- #} 
+            {% for field in form %} 
+              {% if field.name != 'label_preview' %} 
+                <div class="mb-3">
+                  <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label> 
+                  {% if field.name == 'total_sum' or field.name == 'total_amount' %} 
+                    <div class="input-group">
+                      {{ field }} 
+                      <span class="input-group-text">₽</span>
+                    </div>
+                  {% else %} 
+                    {{ field }} 
+                  {% endif %} 
+                  {% if field.help_text %} 
+                    <div class="form-text">{{ field.help_text }}</div>
+                  {% endif %} 
+                  {% if field.errors %} 
+                    <div class="invalid-feedback d-block">{{ field.errors|join:", " }}</div>
+                  {% endif %} 
+                  {# Показываем текущее значение для дат при редактировании #} 
+                  {% if view.object and field.name in 'date_placement,date_finish,cession_date,agreement_date' %} 
+                    <div class="form-text">Текущее значение: 
+                      {% if field.name == 'agreement_date' and view.object.agreement_date %} 
+                        {{ view.object.agreement_date|date:"d.m.Y H:i" }} 
+                      {% elif field.name == 'date_placement' and view.object.date_placement %} 
+                        {{ view.object.date_placement|date:"d.m.Y" }} 
+                      {% elif field.name == 'date_finish' and view.object.date_finish %} 
+                        {{ view.object.date_finish|date:"d.m.Y" }} 
+                      {% elif field.name == 'cession_date' and view.object.cession_date %} 
+                        {{ view.object.cession_date|date:"d.m.Y" }} 
+                      {% endif %} 
+                    </div>
+                  {% endif %} 
+                </div>
+              {% endif %} 
+            {% endfor %} 
+            {# --- скрытое поле для agreement при создании портфеля --- #} 
+            {% if 'portfolio' in request.path and 'new' in request.path %} 
+              <input type="hidden" name="agreement" value="{{ view.kwargs.agreement_pk }}">
+              <!-- Скрытые поля для динамического имени портфеля -->
+              <input type="hidden" id="agreement-creditor" value="{{ agreement.creditor }}">
+              <input type="hidden" id="agreement-type" value="{{ agreement.get_agreement_type_display }}">
+            {% endif %} 
+            {# --- кнопки --- #} 
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-primary">
+                {% if view.object %}Сохранить{% else %}Создать{% endif %}
+              </button>
+              {% if view.object %} 
+                <a href="{% url 'deals:dashboard' %}" class="btn btn-secondary">Отмена</a>
+              {% else %} 
+                <a href="{% url 'deals:dashboard' %}" class="btn btn-secondary">Отмена</a>
               {% endif %} 
             </div>
-          {% endif %} 
+          </form>
         </div>
-      {% endif %} 
-    {% endfor %} 
-    
-    {# --- скрытое поле для agreement при создании портфеля --- #} 
-    {% if 'portfolio' in request.path and 'new' in request.path %} 
-      <input type="hidden" name="agreement" value="{{ view.agreement.id }}">
-    {% endif %} 
-    
-    {# --- кнопки --- #} 
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary">
-        {% if view.object %}Сохранить{% else %}Создать{% endif %}
-      </button>
-      
-      {% if view.object %} 
-        <a href="{% url 'deals:dashboard' %}?agreement={{ view.object.agreement.id }}" class="btn btn-secondary">Отмена</a>
-      {% else %} 
-        <a href="{% url 'deals:dashboard' %}" class="btn btn-secondary">Отмена</a>
-      {% endif %} 
+      </div>
     </div>
-  </form>
+  </div>
 </div>
 
-<style>
-  /* Стили для формы */
-  .form-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+{# --- скрипт для динамического расчёта label_preview --- #}
+{% if 'portfolio' in request.path %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Поля, влияющие на имя портфеля
+  const datePlacementField = document.querySelector('#id_date_placement');
+  const processTypeField = document.querySelector('#id_process_type');
+  const labelPreview = document.querySelector('#portfolio-label-preview');
+  
+  // Получаем данные договора
+  let creditor, agreementType;
+  
+  // Для нового портфеля берем из скрытых полей
+  if (document.querySelector('#agreement-creditor')) {
+    creditor = document.querySelector('#agreement-creditor').value;
+    agreementType = document.querySelector('#agreement-type').value;
+  } 
+  // Для существующего портфеля берем из data-атрибутов
+  else if (labelPreview) {
+    creditor = labelPreview.getAttribute('data-creditor');
+    agreementType = labelPreview.getAttribute('data-agreement-type');
   }
   
-  .form-header {
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .form-header h2 {
-    margin: 0;
-    color: #495057;
-    font-size: 1.5rem;
-  }
-  
-  .form-group {
-    margin-bottom: 20px;
-  }
-  
-  .form-label {
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: #495057;
-    font-size: 0.95rem;
-  }
-  
-  .form-value {
-    margin-bottom: 8px;
-  }
-  
-  .form-value-with-currency {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  
-  .form-value-with-currency input {
-    margin-right: 8px;
-  }
-  
-  .currency-symbol {
-    font-weight: 500;
-    color: #6c757d;
-  }
-  
-  .form-help {
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin-top: 5px;
-    font-style: italic;
-  }
-  
-  .form-errors {
-    color: #dc3545;
-    font-size: 0.85rem;
-    margin-top: 5px;
-  }
-  
-  .form-current-value {
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin-top: 8px;
-    padding: 5px 8px;
-    background: #f8f9fa;
-    border-radius: 4px;
-  }
-  
-  .form-actions {
-    display: flex;
-    justify-content: flex-start;
-    gap: 10px;
-    margin-top: 30px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-  }
-  
-  /* Стили для полей ввода */
-  .form-value input,
-  .form-value select,
-  .form-value textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 1rem;
-    transition: border-color 0.3s;
-  }
-  
-  .form-value input:focus,
-  .form-value select:focus,
-  .form-value textarea:focus {
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  }
-  
-  /* Адаптивность */
-  @media (max-width: 768px) {
-    .form-container {
-      padding: 15px;
+  // Функция обновления имени портфеля
+  function updatePortfolioLabel() {
+    if (!datePlacementField || !processTypeField || !creditor || !agreementType) return;
+    
+    // Получаем значения полей
+    let datePlacement;
+    if (datePlacementField.value) {
+      datePlacement = new Date(datePlacementField.value).toLocaleDateString('ru-RU');
+    } else if (labelPreview && labelPreview.getAttribute('data-date-placement')) {
+      datePlacement = new Date(labelPreview.getAttribute('data-date-placement')).toLocaleDateString('ru-RU');
+    } else {
+      datePlacement = '';
     }
     
-    .form-actions {
-      flex-direction: column;
+    let processType;
+    if (processTypeField.value) {
+      processType = processTypeField.options[processTypeField.selectedIndex].text;
+    } else if (labelPreview && labelPreview.getAttribute('data-process-type')) {
+      processType = labelPreview.getAttribute('data-process-type');
+    } else {
+      processType = '';
     }
     
-    .form-actions .btn {
-      width: 100%;
+    // Формируем новое имя
+    const newLabel = `${creditor}_${agreementType}_${datePlacement}_${processType}`;
+    
+    // Обновляем отображаемое имя
+    if (labelPreview) {
+      labelPreview.textContent = newLabel;
+      
+      // Добавляем эффект подсветки при изменении
+      labelPreview.style.transition = 'all 0.3s ease';
+      labelPreview.style.backgroundColor = '#e7f1ff';
+      setTimeout(() => {
+        labelPreview.style.backgroundColor = 'transparent';
+      }, 500);
     }
   }
-</style>
+  
+  // Добавляем обработчики событий
+  if (datePlacementField) {
+    datePlacementField.addEventListener('change', updatePortfolioLabel);
+    datePlacementField.addEventListener('input', updatePortfolioLabel);
+  }
+  if (processTypeField) {
+    processTypeField.addEventListener('change', updatePortfolioLabel);
+  }
+  
+  // Инициализация при загрузке
+  updatePortfolioLabel();
+});
+</script>
+{% endif %}
 {% endblock %}
