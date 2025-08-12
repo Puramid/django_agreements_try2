@@ -4,7 +4,6 @@ from django.views.generic import TemplateView, CreateView, UpdateView, DeleteVie
 from django.contrib import messages
 from .models import Agreement, Portfolio
 from .forms import AgreementForm, PortfolioForm
-import datetime
 
 
 class DashboardView(TemplateView):
@@ -12,7 +11,7 @@ class DashboardView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         if not request.GET.get('agreement'):
-            first = Agreement.objects.order_by('-id').first()
+            first = Agreement.objects.order_by('id').first()  # Изменено на восходящий порядок
             if first:
                 return redirect(f"{reverse_lazy('deals:dashboard')}?agreement={first.pk}")
         return super().get(request, *args, **kwargs)
@@ -22,7 +21,7 @@ class DashboardView(TemplateView):
 
         # параметры сортировки
         sort = self.request.GET.get('sort', 'id')
-        direction = self.request.GET.get('dir', 'desc')
+        direction = self.request.GET.get('dir', 'asc')  # Изменено на восходящий порядок по умолчанию
 
         allowed = {'id', 'agreement_code', 'agreement_date', 'total_sum'}
         if sort == 'creditor':
@@ -32,7 +31,7 @@ class DashboardView(TemplateView):
         elif sort in allowed:
             order = f"{'-' if direction == 'desc' else ''}{sort}"
         else:
-            order = '-id'
+            order = 'id'  # Восходящий порядок по умолчанию
 
         ctx['agreements'] = Agreement.objects.select_related('creditor').order_by(order)
         ctx['current_sort'] = sort
@@ -58,44 +57,31 @@ class AgreementUpdateView(UpdateView):
     model = Agreement
     form_class = AgreementForm
     template_name = 'deals/generic_form.html'
+    success_url = reverse_lazy('deals:dashboard')
 
     def get_initial(self):
         initial = super().get_initial()
         # Подставляем текущие значения дат
         if self.object.agreement_date:
-            initial['agreement_date'] = self.object.agreement_date.strftime('%Y-%m-%dT%H:%M')
+            initial['agreement_date'] = self.object.agreement_date.strftime('%Y-%m-%d')
         return initial
 
     def form_valid(self, form):
-        old_id = self.object.id
+        # Обновляем существующий объект вместо создания нового
+        self.object.creditor = form.cleaned_data['creditor']
+        self.object.creditor_first = form.cleaned_data['creditor_first']
+        self.object.agreement_code = form.cleaned_data['agreement_code']
+        self.object.agreement_date = form.cleaned_data['agreement_date'] or self.object.agreement_date
+        self.object.agreement_type = form.cleaned_data['agreement_type']
+        self.object.total_sum = form.cleaned_data['total_sum']
+        self.object.total_amount = form.cleaned_data['total_amount']
         
-        # Создаем новый объект с текущими датами по умолчанию
-        new_agreement = Agreement.objects.create(
-            creditor=form.cleaned_data['creditor'],
-            creditor_first=form.cleaned_data['creditor_first'],
-            agreement_code=form.cleaned_data['agreement_code'],
-            agreement_date=form.cleaned_data['agreement_date'] or self.object.agreement_date,
-            agreement_type=form.cleaned_data['agreement_type'],
-            total_sum=form.cleaned_data['total_sum'],
-            total_amount=form.cleaned_data['total_amount'],
-            agreement_doc=form.cleaned_data['agreement_doc']
-        )
+        # Обновляем документ, если он был загружен
+        if 'agreement_doc' in form.cleaned_data and form.cleaned_data['agreement_doc']:
+            self.object.agreement_doc = form.cleaned_data['agreement_doc']
         
-        # Копируем связанные портфели
-        for portfolio in self.object.portfolio_set.all():
-            Portfolio.objects.create(
-                label=portfolio.label,
-                type=portfolio.type,
-                process_type=portfolio.process_type,
-                agreement=new_agreement,
-                total_sum=portfolio.total_sum,
-                date_placement=portfolio.date_placement,
-                date_finish=portfolio.date_finish,
-                cession_date=portfolio.cession_date
-            )
-        
-        self.object.delete()
-        messages.success(self.request, f"Договор №{old_id} пересоздан как №{new_agreement.id}")
+        self.object.save()
+        messages.success(self.request, f"Договор №{self.object.id} обновлен")
         return redirect('deals:dashboard')
 
 
@@ -167,21 +153,24 @@ class PortfolioUpdateView(UpdateView):
         return ctx
 
     def form_valid(self, form):
-        # Используем текущие даты, если не указаны новые
-        new_portfolio = Portfolio.objects.create(
-            type=form.cleaned_data['type'],
-            process_type=form.cleaned_data['process_type'],
-            agreement=self.object.agreement,
-            total_sum=form.cleaned_data['total_sum'],
-            date_placement=form.cleaned_data['date_placement'] or self.object.date_placement,
-            date_finish=form.cleaned_data['date_finish'] or self.object.date_finish,
-            cession_date=form.cleaned_data['cession_date'] or self.object.cession_date
+        # Обновляем существующий объект вместо создания нового
+        self.object.type = form.cleaned_data['type']
+        self.object.process_type = form.cleaned_data['process_type']
+        self.object.total_sum = form.cleaned_data['total_sum']
+        self.object.date_placement = form.cleaned_data['date_placement'] or self.object.date_placement
+        self.object.date_finish = form.cleaned_data['date_finish'] or self.object.date_finish
+        self.object.cession_date = form.cleaned_data['cession_date'] or self.object.cession_date
+        
+        # Обновляем label на основе новых данных
+        self.object.label = (
+            f"{self.object.agreement.creditor}_"
+            f"{self.object.agreement.get_agreement_type_display()}_"
+            f"{self.object.date_placement.strftime('%d.%m.%Y')}_"
+            f"{self.object.get_process_type_display()}"
         )
         
-        old_label = self.object.label
-        self.object.delete()
-        
-        messages.success(self.request, f"Портфель «{old_label}» отредактирован")
+        self.object.save()
+        messages.success(self.request, f"Портфель «{self.object.label}» обновлен")
         return redirect('deals:dashboard')
 
     def get_success_url(self):

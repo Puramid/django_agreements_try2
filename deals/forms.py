@@ -1,4 +1,3 @@
-# deals/forms.py
 from django import forms
 from .models import Agreement, Portfolio
 
@@ -17,8 +16,8 @@ class AgreementForm(forms.ModelForm):
             'agreement_doc',
         ]
         widgets = {
-            'agreement_date': forms.DateTimeInput(attrs={
-                'type': 'datetime-local',
+            'agreement_date': forms.DateInput(attrs={  # Изменено с DateTimeInput на DateInput
+                'type': 'date',  # Изменено с datetime-local на date
                 'class': 'form-control'
             }),
             'total_sum': forms.NumberInput(attrs={
