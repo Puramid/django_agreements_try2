@@ -1,13 +1,465 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <title>{% block title %}ECOI{% endblock %}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ECOI{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Основные стили */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Стили для дашборда */
+        .dashboard-container {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+        
+        /* Панели */
+        .agreements-panel, .portfolios-panel {
+            flex: 1;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Заголовки панелей */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+        }
+        
+        .panel-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #495057;
+        }
+        
+        /* Списки */
+        .agreements-list, .portfolios-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        /* Элементы договоров */
+        .agreement-item {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .agreement-item.active {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            background-color: #f0f7ff;
+        }
+        
+        .agreement-main {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+        }
+        
+        .agreement-info {
+            flex: 1;
+        }
+        
+        .agreement-code {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #007bff;
+        }
+        
+        .agreement-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .agreement-meta span {
+            font-size: 0.9em;
+            color: #666;
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .agreement-financial {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.9em;
+        }
+        
+        .financial-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .financial-label {
+            font-weight: bold;
+            margin-right: 5px;
+            color: #495057;
+        }
+        
+        .financial-value {
+            color: #28a745;
+            font-weight: 500;
+        }
+        
+        .agreement-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .agreement-actions a {
+            text-decoration: none;
+            font-size: 1.1em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .agreement-actions a:hover {
+            background-color: #e9ecef;
+        }
+        
+        /* Детали договоров */
+        .agreement-details {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+            display: none;
+        }
+        
+        .detail-row {
+            margin-bottom: 12px;
+            display: flex;
+        }
+        
+        .detail-row strong {
+            min-width: 250px; /* Увеличенное расстояние */
+            color: #495057;
+        }
+        
+        /* Элементы портфелей */
+        .portfolio-item {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #fff;
+        }
+        
+        .portfolio-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .portfolio-title {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .portfolio-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .portfolio-actions a {
+            text-decoration: none;
+            font-size: 1.1em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .portfolio-actions a:hover {
+            background-color: #e9ecef;
+        }
+        
+        .portfolio-info {
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+        
+        .info-row {
+            display: flex;
+        }
+        
+        .info-row span {
+            font-weight: bold;
+            margin-right: 5px;
+            color: #495057;
+        }
+        
+        /* Кнопки */
+        .toggle-details {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        
+        .toggle-details:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        /* Сообщения */
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .agreements-panel, .portfolios-panel {
+                height: 400px;
+            }
+            
+            .agreement-meta {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .portfolio-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .agreement-financial {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+        
+        /* Дополнительные стили */
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        
+        .alert {
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        
+        /* Стили для форм */
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        /* Стили для подтверждения удаления */
+        .confirm-delete {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .confirm-delete h4 {
+            margin-bottom: 20px;
+            color: #495057;
+        }
+        
+        .confirm-delete .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        .confirm-delete .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+    </style>
 </head>
-<body class="bg-light">
-  <div class="container-fluid">
-    {% block content %}{% endblock %}
-  </div>
+<body>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Обработка кликов по договорам
+            const agreementItems = document.querySelectorAll('.agreement-item');
+            
+            agreementItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Игнорируем клики по кнопкам действий
+                    if (e.target.closest('.agreement-actions')) return;
+                    
+                    const agreementId = this.dataset.agreementId;
+                    const detailsBlock = document.getElementById(`details-${agreementId}`);
+                    
+                    // Переключаем видимость деталей
+                    if (detailsBlock.style.display === 'block') {
+                        detailsBlock.style.display = 'none';
+                    } else {
+                        // Закрываем все другие открытые детали
+                        document.querySelectorAll('.agreement-details').forEach(detail => {
+                            detail.style.display = 'none';
+                        });
+                        
+                        detailsBlock.style.display = 'block';
+                    }
+                    
+                    // Обновляем активный договор
+                    agreementItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Обновляем URL без перезагрузки страницы
+                    const url = new URL(window.location);
+                    url.searchParams.set('agreement', agreementId);
+                    window.history.pushState({}, '', url);
+                    
+                    // Обновляем панель портфелей
+                    updatePortfoliosPanel(agreementId);
+                });
+            });
+            
+            // Обработка кнопок "Подробнее" для портфелей
+            const toggleButtons = document.querySelectorAll('.toggle-details');
+            
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const detailsBlock = document.getElementById(targetId);
+                    
+                    if (detailsBlock.style.display === 'block') {
+                        detailsBlock.style.display = 'none';
+                        this.textContent = 'Подробнее';
+                    } else {
+                        detailsBlock.style.display = 'block';
+                        this.textContent = 'Скрыть';
+                    }
+                });
+            });
+            
+            // Функция обновления панели портфелей
+            function updatePortfoliosPanel(agreementId) {
+                // Здесь можно добавить AJAX-запрос для обновления портфелей
+                // В данном примере просто перезагружаем страницу
+                window.location.href = `?agreement=${agreementId}`;
+            }
+            
+            // Устанавливаем активный договор при загрузке страницы
+            const currentAgreementId = new URLSearchParams(window.location.search).get('agreement');
+            if (currentAgreementId) {
+                const activeItem = document.querySelector(`.agreement-item[data-agreement-id="${currentAgreementId}"]`);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                    
+                    // Открываем детали активного договора
+                    const detailsBlock = document.getElementById(`details-${currentAgreementId}`);
+                    if (detailsBlock) {
+                        detailsBlock.style.display = 'block';
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

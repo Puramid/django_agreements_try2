@@ -1,383 +1,157 @@
-{% extends 'base.html' %}
-{% load static humanize custom_filters %}
-{% load query_transform %}
-
-{% block title %}ECOI{% endblock %}
-
-{% block content %}
-<style>
-  /* Основной контейнер 2:1 */
-  .dashboard-container {
-      display: flex;
-      gap: 1rem;
-      min-height: 100vh;
-  }
-  
-  .panel-left {
-      flex: 2;
-      max-width: calc(66.67% - 0.5rem);
-  }
-  
-  .panel-right {
-      flex: 1;
-      max-width: calc(33.33% - 0.5rem);
-  }
-
-  /* КОРРЕКТИРОВКА ШИРИНЫ КОЛОНОК */
-  /* Было: ID 80px, Кредитор auto (примерно 150-200px) */
-  /* Стало: Кредитор / 2.5, ID + это же значение */
-  .id-column {
-      width: 440px !important; /* Было 80px + 40px от кредитора */
-      min-width: 440px !important;
-  }
-  
-  .creditor-column {
-      width: 300px !important; /* Было примерно 150px / 2.5 = 60px */
-      min-width: 300px !important;
-  }
-
-  /* Разворачиваемое окно на всю ширину */
-  .expandable-window {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease-out;
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      margin: 10px 0;
-      width: 100%;
-      box-sizing: border-box;
-  }
-  .expandable-window.show {
-      max-height: 1000px;
-      padding: 20px;
-      width: calc(100% - 20px);
-      margin-left: -10px;
-      margin-right: -10px;
-  }
-
-  /* Курсоры для разных действий */
-  .double-click-row {
-      cursor: pointer;
-  }
-  .double-click-row:hover {
-      background-color: rgba(0,123,255,0.1);
-  }
-  .single-click-header {
-      cursor: pointer;
-  }
-  .single-click-header:hover {
-      background-color: rgba(0,123,255,0.1);
-  }
-
-  .expand-toggle {
-      cursor: pointer;
-      color: #007bff;
-      font-size: 0.85em;
-      text-decoration: underline;
-      margin-left: 5px;
-  }
-
-  /* Остальные стили */
-  .detail-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #e9ecef;
-  }
-  .detail-label {
-      font-weight: 600;
-      color: #495057;
-      min-width: 120px;
-  }
-  .detail-value {
-      color: #212529;
-      text-align: right;
-      flex: 1;
-  }
-  .currency-format {
-      white-space: nowrap;
-  }
-
-  /* Адаптивность */
-  @media (max-width: 768px) {
-      .dashboard-container {
-          flex-direction: column;
-      }
-      .panel-left,
-      .panel-right {
-          max-width: 100%;
-      }
-  }
-
-  /* Компактная таблица */
-  .table th,
-  .table td {
-      padding: 0.5rem;
-      font-size: 0.875rem;
-      vertical-align: middle;
-  }
-</style>
-
-<!-- Сообщения -->
-{% if messages %}
-  <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
+{% extends 'base.html' %} 
+{% load static humanize custom_filters %} 
+{% load query_transform %} 
+{% block title %}ECOI{% endblock %} 
+{% block content %} 
+{% if messages %} 
+{% for message in messages %} 
+<div class="alert alert-info">{{ message }}</div> 
+{% endfor %} 
+{% endif %} 
 
 <div class="dashboard-container">
-  <!-- ЛЕВАЯ ПАНЕЛЬ: Договоры (2/3 ширины) -->
-  <div class="panel-left">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">Договоры</h5>
-      <a class="btn btn-sm btn-primary" href="{% url 'deals:agreement-new' %}">+ Новый</a>
+  <!-- Левая панель: Список договоров -->
+  <div class="agreements-panel">
+    <div class="panel-header">
+      <h3>Договоры</h3>
+      <a href="{% url 'deals:agreement-new' %}" class="btn btn-primary btn-sm">+ Новый</a>
     </div>
-
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th class="sort-col {% if current_sort == 'id' %}{{ current_dir }}{% endif %} id-column" style="width:120px;">
-              <a href="?{% query_transform sort='id' dir=rev_dir agreement=request.GET.agreement %}">ID</a>
-            </th>
-            <th class="sort-col {% if current_sort == 'agreement_code' %}{{ current_dir }}{% endif %}">
-              <a href="?{% query_transform sort='agreement_code' dir=rev_dir agreement=request.GET.agreement %}">Код</a>
-            </th>
-            <th class="sort-col {% if current_sort == 'agreement_date' %}{{ current_dir }}{% endif %}" style="width:80px;">
-              <a href="?{% query_transform sort='agreement_date' dir=rev_dir agreement=request.GET.agreement %}">Дата</a>
-            </th>
-            <th class="sort-col {% if current_sort == 'agreement_type' %}{{ current_dir }}{% endif %}" style="width:80px;">
-              <a href="?{% query_transform sort='agreement_type' dir=rev_dir agreement=request.GET.agreement %}">Тип</a>
-            </th>
-            <th class="sort-col {% if current_sort == 'creditor' %}{{ current_dir }}{% endif %} creditor-column" style="width:60px;">
-              <a href="?{% query_transform sort='creditor' dir=rev_dir agreement=request.GET.agreement %}">Кредитор</a>
-            </th>
-            <th class="sort-col {% if current_sort == 'total_sum' %}{{ current_dir }}{% endif %}" style="width:100px;">
-              <a href="?{% query_transform sort='total_sum' dir=rev_dir agreement=request.GET.agreement %}">Сумма</a>
-            </th>
-            <th style="width:70px;"></th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for a in agreements %}
-          <tr class="double-click-row {% if current_agreement and a.id == current_agreement.id %}table-primary{% endif %}" 
-              data-agreement-id="{{ a.id }}" 
-              ondblclick="toggleExpand('agreement-{{ a.id }}')">
-            <td>
-              <div class="d-flex align-items-center">
-                <a href="?{% query_transform agreement=a.id %}" 
-                   onclick="event.stopPropagation();" 
-                   style="text-decoration: none;">
-                  {{ a.id }}
-                </a>
-              </div>
-              <!-- Разворачиваемое окно на всю ширину -->
-              <div id="agreement-{{ a.id }}" class="expandable-window">
-                <div class="detail-section">
-                  <h6>Информация о договоре</h6>
-                  <div class="detail-row">
-                    <span class="detail-label">Код договора:</span>
-                    <span class="detail-value">{{ a.agreement_code }}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Дата договора:</span>
-                    <span class="detail-value">{{ a.agreement_date|date:"d.m.Y H:i" }}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Тип договора:</span>
-                    <span class="detail-value">{{ a.get_agreement_type_display }}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Кредитор:</span>
-                    <span class="detail-value">{{ a.creditor }}</span>
-                  </div>
-                  {% if a.creditor_first %}
-                  <div class="detail-row">
-                    <span class="detail-label">Перв. кредитор:</span>
-                    <span class="detail-value">{{ a.creditor_first }}</span>
-                  </div>
-                  {% endif %}
-                  <div class="detail-row">
-                    <span class="detail-label">Стоимость портфеля:</span>
-                    <span class="detail-value currency-format">{{ a.total_sum|currency_format }}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Размер портфеля:</span>
-                    <span class="detail-value currency-format">{{ a.total_amount|currency_format }}</span>
-                  </div>
-                  {% if a.agreement_doc %}
-                  <div class="detail-row">
-                    <span class="detail-label">Документ:</span>
-                    <span class="detail-value">
-                      <a href="{{ a.agreement_doc.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                        📎 Скачать
-                      </a>
-                    </span>
-                  </div>
-                  {% endif %}
-                </div>
-                
-                <div class="action-buttons">
-                  <a href="{% url 'deals:agreement-edit' a.pk %}" class="btn btn-primary btn-sm me-2">
-                    ✎ Редактировать
-                  </a>
-                  <a href="{% url 'deals:agreement-delete' a.pk %}" class="btn btn-outline-danger btn-sm">
-                    🗑 Удалить
-                  </a>
-                </div>
-              </div>
-            </td>
-            <td><a href="?{% query_transform agreement=a.id %}" onclick="event.stopPropagation();">{{ a.agreement_code }}</a></td>
-            <td><a href="?{% query_transform agreement=a.id %}" onclick="event.stopPropagation();">{{ a.agreement_date|date:"d.m.Y" }}</a></td>
-            <td><a href="?{% query_transform agreement=a.id %}" onclick="event.stopPropagation();">{{ a.get_agreement_type_display }}</a></td>
-            <td><a href="?{% query_transform agreement=a.id %}" onclick="event.stopPropagation();">{{ a.creditor }}</a></td>
-            <td><a href="?{% query_transform agreement=a.id %}" onclick="event.stopPropagation();" class="currency-format">{{ a.total_sum|currency_format }}</a></td>
-            <td>
-              <a class="btn btn-sm btn-outline-secondary edit-btn" href="{% url 'deals:agreement-edit' a.pk %}" onclick="event.stopPropagation();">✎</a>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="7" class="text-center">Нет договоров</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ПРАВАЯ ПАНЕЛЬ: Портфели (1/3 ширины) -->
-  <div class="panel-right">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">Портфели по договору №{{ current_agreement.id|default:"" }}</h5>
-      {% if current_agreement %}
-        <a class="btn btn-sm btn-success" href="{% url 'deals:portfolio-new' current_agreement.pk %}">+ Портфель</a>
-      {% endif %}
-    </div>
-
-    {% if current_agreement %}
-      {% for p in current_agreement.portfolio_set.all %}
-        <div class="card mb-3">
-          <div class="single-click-header card-header" 
-               onclick="toggleExpand('portfolio-{{ p.id }}')"
-               title="Клик - подробности">
-            <div class="d-flex justify-content-between align-items-center">
-              <h6 class="mb-0">
-                {{ p.label|default:"Без названия" }}
-              </h6>
-              <span class="expand-toggle" id="portfolio-toggle-{{ p.id }}">
-                Подробно
-              </span>
+    
+    <div class="agreements-list">
+      {% for a in agreements %}
+      <div class="agreement-item {% if a == current_agreement %}active{% endif %}" data-agreement-id="{{ a.id }}">
+        <div class="agreement-main">
+          <div class="agreement-info">
+            <div class="agreement-code">{{ a.agreement_code }}</div>
+            <div class="agreement-meta">
+              <span>{{ a.agreement_date|date:"d.m.Y" }}</span>
+              <span>{{ a.get_agreement_type_display }}</span>
+              <span>{{ a.creditor }}</span>
+              <!-- Добавляем сумму и стоимость портфеля -->
+              <span>Сумма: {{ a.total_sum|currency_format }}</span>
+              <span>Стоимость: {{ a.total_amount|currency_format }}</span>
             </div>
           </div>
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <span class="badge bg-info text-dark mb-1">{{ p.get_type_display }}</span>
-                <div class="small text-muted">
-                  Сумма: {{ p.total_sum|currency_format }}<br>
-                  Старт: {{ p.date_placement|date:"d.m.Y" }}
-                </div>
-              </div>
-              <a class="btn btn-sm btn-outline-primary edit-btn" href="{% url 'deals:portfolio-edit' p.pk %}">✎</a>
-            </div>
-          </div>
-          
-          <!-- Разворачиваемое окно для портфеля -->
-          <div id="portfolio-{{ p.id }}" class="expandable-window">
-            <div class="detail-section">
-              <h6>Информация о портфеле</h6>
-              <div class="detail-row">
-                <span class="detail-label">Наименование:</span>
-                <span class="detail-value">{{ p.label|default:"Без названия" }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Тип:</span>
-                <span class="detail-value">{{ p.get_type_display }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Тип работы:</span>
-                <span class="detail-value">{{ p.get_process_type_display }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Стоимость:</span>
-                <span class="detail-value currency-format">{{ p.total_sum|currency_format }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Дата начала:</span>
-                <span class="detail-value">{{ p.date_placement|date:"d.m.Y" }}</span>
-              </div>
-              {% if p.date_finish %}
-              <div class="detail-row">
-                <span class="detail-label">Дата окончания:</span>
-                <span class="detail-value">{{ p.date_finish|date:"d.m.Y" }}</span>
-              </div>
-              {% endif %}
-              {% if p.cession_date %}
-              <div class="detail-row">
-                <span class="detail-label">Дата переуступки:</span>
-                <span class="detail-value">{{ p.cession_date|date:"d.m.Y" }}</span>
-              </div>
-              {% endif %}
-            </div>
-            
-            <div class="action-buttons">
-              <a href="{% url 'deals:portfolio-edit' p.pk %}" class="btn btn-primary btn-sm me-2">
-                ✎ Редактировать
-              </a>
-              <a href="{% url 'deals:portfolio-delete' p.pk %}" class="btn btn-outline-danger btn-sm">
-                🗑 Удалить
-              </a>
-            </div>
+          <div class="agreement-actions">
+            <a href="?agreement={{ a.id }}" class="view-btn">👁</a>
+            <a href="{% url 'deals:agreement-edit' a.id %}" class="edit-btn">✎</a>
+            <a href="{% url 'deals:agreement-delete' a.id %}" class="delete-btn">🗑</a>
           </div>
         </div>
+        
+        <!-- Скрытый блок с деталями -->
+        <div class="agreement-details" id="details-{{ a.id }}">
+          <div class="detail-row">
+            <strong>Код договора:</strong> {{ a.agreement_code }}
+          </div>
+          <div class="detail-row">
+            <strong>Дата договора:</strong> {{ a.agreement_date|date:"d.m.Y H:i" }}
+          </div>
+          <div class="detail-row">
+            <strong>Тип договора:</strong> {{ a.get_agreement_type_display }}
+          </div>
+          <div class="detail-row">
+            <strong>Кредитор:</strong> {{ a.creditor }}
+          </div>
+          {% if a.creditor_first %}
+          <div class="detail-row">
+            <strong>Перв. кредитор:</strong> {{ a.creditor_first }}
+          </div>
+          {% endif %}
+          <div class="detail-row">
+            <strong>Стоимость портфеля:</strong> {{ a.total_sum|currency_format }}
+          </div>
+          <div class="detail-row">
+            <strong>Размер портфеля:</strong> {{ a.total_amount|currency_format }}
+          </div>
+          {% if a.agreement_doc %}
+          <div class="detail-row">
+            <strong>Документ:</strong> <a href="{{ a.agreement_doc.url }}">📎 Скачать</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
       {% empty %}
-        <p class="text-muted">Нет портфелей</p>
+      <div class="no-data">Нет договоров</div>
       {% endfor %}
-    {% else %}
-      <p class="text-muted">Выберите договор слева</p>
-    {% endif %}
+    </div>
+  </div>
+
+  <!-- Правая панель: Портфели -->
+  <div class="portfolios-panel">
+    <div class="panel-header">
+      <h3>Портфели по договору №{{ current_agreement.id|default:"" }}</h3>
+      {% if current_agreement %}
+      <a href="{% url 'deals:portfolio-new' current_agreement.id %}" class="btn btn-primary btn-sm">+ Портфель</a>
+      {% endif %}
+    </div>
+    
+    <div class="portfolios-list">
+      {% if current_agreement %}
+      {% for p in current_agreement.portfolio_set.all %}
+      <div class="portfolio-item">
+        <div class="portfolio-header">
+          <div class="portfolio-title">{{ p.label|default:"Без названия" }}</div>
+          <div class="portfolio-actions">
+            <a href="{% url 'deals:portfolio-edit' p.id %}" class="edit-btn">✎</a>
+            <a href="{% url 'deals:portfolio-delete' p.id %}" class="delete-btn">🗑</a>
+          </div>
+        </div>
+        
+        <div class="portfolio-info">
+          <div class="info-row">
+            <span>Тип:</span> {{ p.get_type_display }}
+          </div>
+          <div class="info-row">
+            <span>Сумма:</span> {{ p.total_sum|currency_format }}
+          </div>
+          <div class="info-row">
+            <span>Старт:</span> {{ p.date_placement|date:"d.m.Y" }}
+          </div>
+          {% if p.date_finish %}
+          <div class="info-row">
+            <span>Окончание:</span> {{ p.date_finish|date:"d.m.Y" }}
+          </div>
+          {% endif %}
+        </div>
+        
+        <button class="toggle-details" data-target="portfolio-details-{{ p.id }}">Подробнее</button>
+        
+        <div id="portfolio-details-{{ p.id }}" class="portfolio-details" style="display: none;">
+          <div class="detail-row">
+            <strong>Наименование:</strong> {{ p.label|default:"Без названия" }}
+          </div>
+          <div class="detail-row">
+            <strong>Тип:</strong> {{ p.get_type_display }}
+          </div>
+          <div class="detail-row">
+            <strong>Тип работы:</strong> {{ p.get_process_type_display }}
+          </div>
+          <div class="detail-row">
+            <strong>Стоимость:</strong> {{ p.total_sum|currency_format }}
+          </div>
+          <div class="detail-row">
+            <strong>Дата начала:</strong> {{ p.date_placement|date:"d.m.Y" }}
+          </div>
+          {% if p.date_finish %}
+          <div class="detail-row">
+            <strong>Дата окончания:</strong> {{ p.date_finish|date:"d.m.Y" }}
+          </div>
+          {% endif %}
+          {% if p.cession_date %}
+          <div class="detail-row">
+            <strong>Дата переуступки:</strong> {{ p.cession_date|date:"d.m.Y" }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="no-data">Нет портфелей</div>
+      {% endfor %}
+      {% else %}
+      <div class="no-data">Выберите договор слева</div>
+      {% endif %}
+    </div>
   </div>
 </div>
-
-<script>
-// Для портфелей - одинарное нажатие
-function toggleExpand(elementId) {
-    const element = document.getElementById(elementId);
-    const toggle = element.id.includes('portfolio-') ? 
-                   document.getElementById('portfolio-toggle-' + elementId.replace('portfolio-', '')) :
-                   null;
-    
-    if (element.classList.contains('show')) {
-        element.classList.remove('show');
-        if (toggle) toggle.textContent = 'Подробно';
-    } else {
-        // Закрываем все другие открытые окна
-        document.querySelectorAll('.expandable-window.show').forEach(el => {
-            el.classList.remove('show');
-        });
-        document.querySelectorAll('.expand-toggle').forEach(el => {
-            if (el !== toggle) el.textContent = 'Подробно';
-        });
-        
-        // Открываем выбранное окно
-        element.classList.add('show');
-        if (toggle) toggle.textContent = 'Свернуть';
-    }
-}
-
-// Автоматическое скрытие сообщений
-setTimeout(function() {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(function(alert) {
-        const bsAlert = new bootstrap.Alert(alert);
-        bsAlert.close();
-    });
-}, 5000);
-</script>
-
 {% endblock %}
