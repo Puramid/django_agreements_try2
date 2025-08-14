@@ -1,0 +1,48 @@
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Форматирование валюты в полях ввода
+    const currencyFields = document.querySelectorAll('#id_total_sum, #id_total_amount');
+    
+    currencyFields.forEach(field => {
+        // Форматируем значение при загрузке
+        if (field.value) {
+            field.value = formatCurrency(field.value);
+        }
+        
+        // Форматируем при изменении
+        field.addEventListener('blur', function() {
+            if (this.value) {
+                this.value = formatCurrency(this.value);
+            }
+        });
+        
+        // Убираем форматирование при фокусе
+        field.addEventListener('focus', function() {
+            this.value = this.value.replace(/[^\d.]/g, '');
+        });
+    });
+    
+    // Функция форматирования валюты
+    function formatCurrency(value) {
+        // Удаляем все нечисловые символы кроме точки
+        value = value.toString().replace(/[^\d.]/g, '');
+        
+        // Разделяем на целую и дробную часть
+        const parts = value.split('.');
+        let integerPart = parts[0] || '0';
+        let decimalPart = parts.length > 1 ? parts[1] : '';
+        
+        // Форматируем целую часть с пробелами
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        
+        // Ограничиваем дробную часть двумя знаками
+        if (decimalPart.length > 2) {
+            decimalPart = decimalPart.substring(0, 2);
+        }
+        
+        return decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+    }
+});
+</script>
+{% endblock %}

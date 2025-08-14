@@ -5,7 +5,10 @@
 {% block content %} 
 {% if messages %} 
 {% for message in messages %} 
-<div class="alert alert-info">{{ message }}</div> 
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div> 
 {% endfor %} 
 {% endif %} 
 
@@ -33,9 +36,23 @@
             </div>
           </div>
           <div class="agreement-actions">
-            <a href="?agreement={{ a.id }}" class="view-btn">👁</a>
-            <a href="{% url 'deals:agreement-edit' a.id %}" class="edit-btn">✎</a>
-            <a href="{% url 'deals:agreement-delete' a.id %}" class="delete-btn">🗑</a>
+            <a href="?agreement={{ a.id }}" class="view-btn" title="Просмотреть портфели">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+              </svg>
+            </a>
+            <a href="{% url 'deals:agreement-edit' a.id %}" class="edit-btn" title="Редактировать">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+              </svg>
+            </a>
+            <a href="{% url 'deals:agreement-delete' a.id %}" class="delete-btn" title="Удалить">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+              </svg>
+            </a>
           </div>
         </div>
         
@@ -69,13 +86,24 @@
           </div>
           {% if a.agreement_doc %}
           <div class="detail-row">
-            <strong>Документ:</strong> <a href="{{ a.agreement_doc.url }}">📎 Скачать</a>
+            <strong>Документ:</strong> <a href="{{ a.agreement_doc.url }}" class="document-link">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-text" viewBox="0 0 16 16">
+                <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
+                <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+              </svg>
+              Скачать
+            </a>
           </div>
           {% endif %}
         </div>
       </div>
       {% empty %}
-      <div class="no-data">Нет договоров</div>
+      <div class="no-data">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-inbox" viewBox="0 0 16 16">
+          <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4H4.98zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438L14.934 9zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374l3.7-4.625z"/>
+        </svg>
+        <p>Нет договоров</p>
+      </div>
       {% endfor %}
     </div>
   </div>
@@ -83,7 +111,6 @@
   <!-- Правая панель: Портфели -->
   <div class="portfolios-panel">
     <div class="panel-header">
-      <!-- Изменено: вместо номера договора отображаем код договора -->
       <h3>Портфели по договору {% if current_agreement %}({{ current_agreement.agreement_code }}){% else %}(не выбран){% endif %}</h3>
       {% if current_agreement %}
       <a href="{% url 'deals:portfolio-new' current_agreement.id %}" class="btn btn-primary btn-sm">+ Портфель</a>
@@ -97,8 +124,17 @@
         <div class="portfolio-header">
           <div class="portfolio-title">{{ p.label|default:"Без названия" }}</div>
           <div class="portfolio-actions">
-            <a href="{% url 'deals:portfolio-edit' p.id %}" class="edit-btn">✎</a>
-            <a href="{% url 'deals:portfolio-delete' p.id %}" class="delete-btn">🗑</a>
+            <a href="{% url 'deals:portfolio-edit' p.id %}" class="edit-btn" title="Редактировать">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+              </svg>
+            </a>
+            <a href="{% url 'deals:portfolio-delete' p.id %}" class="delete-btn" title="Удалить">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+              </svg>
+            </a>
           </div>
         </div>
         
@@ -122,7 +158,12 @@
           {% endif %}
         </div>
         
-        <button class="toggle-details" data-target="portfolio-details-{{ p.id }}">Подробнее</button>
+        <button class="toggle-details" data-target="portfolio-details-{{ p.id }}">
+          <span class="toggle-text">Подробнее</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
+        </button>
         
         <div id="portfolio-details-{{ p.id }}" class="portfolio-details" style="display: none;">
           <div class="detail-row">
@@ -156,12 +197,134 @@
         </div>
       </div>
       {% empty %}
-      <div class="no-data">Нет портфелей</div>
+      <div class="no-data">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-folder" viewBox="0 0 16 16">
+          <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31zm.654.757a1.224 1.224 0 0 1-.211.808l.637 7a1 1 0 0 0 .996.915h10.348a1 1 0 0 0 .995-.915l.637-7A1.224 1.224 0 0 1 14.81 4H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139z"/>
+        </svg>
+        <p>Нет портфелей</p>
+      </div>
       {% endfor %}
       {% else %}
-      <div class="no-data">Выберите договор слева</div>
+      <div class="no-data">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+        </svg>
+        <p>Выберите договор слева</p>
+      </div>
       {% endif %}
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Функция для переключения деталей договора
+    function setupAgreementDetails() {
+        const agreementItems = document.querySelectorAll('.agreement-item');
+        
+        agreementItems.forEach(item => {
+            const viewBtn = item.querySelector('.view-btn');
+            const details = item.querySelector('.agreement-details');
+            
+            if (viewBtn && details) {
+                viewBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Закрываем все другие детали
+                    document.querySelectorAll('.agreement-details').forEach(detail => {
+                        if (detail !== details) {
+                            detail.style.display = 'none';
+                        }
+                    });
+                    
+                    // Переключаем текущие детали
+                    details.style.display = details.style.display === 'block' ? 'none' : 'block';
+                });
+            }
+        });
+    }
+    
+    // Функция для переключения деталей портфеля
+    function setupPortfolioDetails() {
+        const toggleButtons = document.querySelectorAll('.toggle-details');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const details = document.getElementById(targetId);
+                const toggleText = this.querySelector('.toggle-text');
+                const toggleIcon = this.querySelector('svg');
+                
+                if (details) {
+                    const isVisible = details.style.display === 'block';
+                    details.style.display = isVisible ? 'none' : 'block';
+                    toggleText.textContent = isVisible ? 'Подробнее' : 'Скрыть';
+                    
+                    // Поворачиваем иконку
+                    if (isVisible) {
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                    } else {
+                        toggleIcon.style.transform = 'rotate(180deg)';
+                    }
+                }
+            });
+        });
+    }
+    
+    // Функция для подсветки активного договора
+    function highlightActiveAgreement() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeId = urlParams.get('agreement');
+        
+        if (activeId) {
+            const activeItem = document.querySelector(`.agreement-item[data-agreement-id="${activeId}"]`);
+            if (activeItem) {
+                // Убираем активный класс у всех элементов
+                document.querySelectorAll('.agreement-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Добавляем активный класс к текущему элементу
+                activeItem.classList.add('active');
+            }
+        }
+    }
+    
+    // Функция для сортировки договоров
+    function setupSorting() {
+        const sortableHeaders = document.querySelectorAll('.sortable');
+        
+        sortableHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const field = this.getAttribute('data-field');
+                const currentSort = new URLSearchParams(window.location.search).get('sort') || 'id';
+                const currentDir = new URLSearchParams(window.location.search).get('dir') || 'asc';
+                
+                // Определяем новое направление сортировки
+                let newDir = 'asc';
+                if (field === currentSort && currentDir === 'asc') {
+                    newDir = 'desc';
+                }
+                
+                // Формируем новый URL
+                const newUrl = `${window.location.pathname}?sort=${field}&dir=${newDir}`;
+                if (urlParams.get('agreement')) {
+                    newUrl += `&agreement=${urlParams.get('agreement')}`;
+                }
+                
+                // Переходим на новый URL
+                window.location.href = newUrl;
+            });
+        });
+    }
+    
+    // Инициализация всех функций
+    setupAgreementDetails();
+    setupPortfolioDetails();
+    highlightActiveAgreement();
+    setupSorting();
+});
+</script>
 {% endblock %}

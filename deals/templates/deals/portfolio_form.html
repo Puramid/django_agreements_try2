@@ -1,0 +1,130 @@
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Получаем элементы DOM
+    const datePlacementField = document.querySelector('#id_date_placement');
+    const processTypeField = document.querySelector('#id_process_type');
+    const labelPreview = document.querySelector('#portfolio-label-preview');
+    
+    // Получаем данные договора
+    let creditor, agreementType;
+    
+    // Для нового портфеля берем из скрытых полей
+    if (document.querySelector('#agreement-creditor')) {
+        creditor = document.querySelector('#agreement-creditor').value;
+        agreementType = document.querySelector('#agreement-type').value;
+    } 
+    // Для существующего портфеля берем из data-атрибутов
+    else if (labelPreview) {
+        creditor = labelPreview.getAttribute('data-creditor');
+        agreementType = labelPreview.getAttribute('data-agreement-type');
+    }
+    
+    // Функция форматирования даты
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
+    
+    // Функция обновления имени портфеля
+    function updatePortfolioLabel() {
+        if (!datePlacementField || !processTypeField || !creditor || !agreementType) return;
+        
+        // Получаем значения полей
+        let datePlacement = datePlacementField.value;
+        if (!datePlacement && labelPreview) {
+            datePlacement = labelPreview.getAttribute('data-date-placement');
+        }
+        
+        let processType = processTypeField.value;
+        if (!processType && labelPreview) {
+            processType = labelPreview.getAttribute('data-process-type');
+        }
+        
+        // Форматируем дату
+        const formattedDate = datePlacement ? formatDate(datePlacement) : '';
+        
+        // Получаем текстовое значение типа процесса
+        let processTypeText = '';
+        if (processType) {
+            const option = processTypeField.querySelector(`option[value="${processType}"]`);
+            processTypeText = option ? option.textContent : processType;
+        }
+        
+        // Формируем новое имя
+        const newLabel = `${creditor}_${agreementType}_${formattedDate}_${processTypeText}`.replace(/_+$/, '');
+        
+        // Обновляем отображаемое имя
+        if (labelPreview) {
+            labelPreview.textContent = newLabel || 'Без названия';
+            
+            // Добавляем эффект подсветки при изменении
+            labelPreview.style.transition = 'all 0.3s ease';
+            labelPreview.style.backgroundColor = '#e7f1ff';
+            setTimeout(() => {
+                labelPreview.style.backgroundColor = 'transparent';
+            }, 500);
+        }
+    }
+    
+    // Форматирование валюты в поле суммы
+    const totalSumField = document.querySelector('#id_total_sum');
+    if (totalSumField) {
+        // Форматируем при загрузке
+        if (totalSumField.value) {
+            totalSumField.value = formatCurrency(totalSumField.value);
+        }
+        
+        // Форматируем при изменении
+        totalSumField.addEventListener('blur', function() {
+            if (this.value) {
+                this.value = formatCurrency(this.value);
+            }
+        });
+        
+        // Убираем форматирование при фокусе
+        totalSumField.addEventListener('focus', function() {
+            this.value = this.value.replace(/[^\d.]/g, '');
+        });
+    }
+    
+    // Функция форматирования валюты
+    function formatCurrency(value) {
+        // Удаляем все нечисловые символы кроме точки
+        value = value.toString().replace(/[^\d.]/g, '');
+        
+        // Разделяем на целую и дробную часть
+        const parts = value.split('.');
+        let integerPart = parts[0] || '0';
+        let decimalPart = parts.length > 1 ? parts[1] : '';
+        
+        // Форматируем целую часть с пробелами
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        
+        // Ограничиваем дробную часть двумя знаками
+        if (decimalPart.length > 2) {
+            decimalPart = decimalPart.substring(0, 2);
+        }
+        
+        return decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+    }
+    
+    // Добавляем обработчики событий для обновления имени портфеля
+    if (datePlacementField) {
+        datePlacementField.addEventListener('change', updatePortfolioLabel);
+        datePlacementField.addEventListener('input', updatePortfolioLabel);
+    }
+    if (processTypeField) {
+        processTypeField.addEventListener('change', updatePortfolioLabel);
+    }
+    
+    // Инициализация при загрузке
+    updatePortfolioLabel();
+});
+</script>
+{% endblock %}
