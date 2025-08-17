@@ -49,14 +49,14 @@ class DashboardView(TemplateView):
 class AgreementCreateView(CreateView):
     model = Agreement
     form_class = AgreementForm
-    template_name = 'deals/generic_form.html'
+    template_name = 'deals/agreement_form.html'
     success_url = reverse_lazy('deals:dashboard')
 
 
 class AgreementUpdateView(UpdateView):
     model = Agreement
     form_class = AgreementForm
-    template_name = 'deals/generic_form.html'
+    template_name = 'deals/agreement_form.html'
     success_url = reverse_lazy('deals:dashboard')
 
     def get_initial(self):
@@ -98,7 +98,7 @@ class AgreementDeleteView(DeleteView):
 class PortfolioCreateView(CreateView):
     model = Portfolio
     form_class = PortfolioForm
-    template_name = 'deals/generic_form.html'
+    template_name = 'deals/portfolio_form.html'
 
     def dispatch(self, request, *args, **kwargs):
         self.agreement = get_object_or_404(Agreement, pk=kwargs['agreement_pk'])
@@ -129,7 +129,7 @@ class PortfolioCreateView(CreateView):
 class PortfolioUpdateView(UpdateView):
     model = Portfolio
     form_class = PortfolioForm
-    template_name = 'deals/generic_form.html'
+    template_name = 'deals/portfolio_form.html'
 
     def get_initial(self):
         initial = super().get_initial()
