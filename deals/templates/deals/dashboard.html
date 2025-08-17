@@ -164,4 +164,138 @@
     </div>
   </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработка кликов по договорам
+        const agreementItems = document.querySelectorAll('.agreement-item');
+        
+        agreementItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Игнорируем клики по кнопкам действий
+                if (e.target.closest('.agreement-actions')) return;
+                
+                const agreementId = this.dataset.agreementId;
+                const detailsBlock = document.getElementById(`details-${agreementId}`);
+                
+                // Переключаем видимость деталей
+                if (detailsBlock.style.display === 'block') {
+                    detailsBlock.style.display = 'none';
+                } else {
+                    // Закрываем все другие открытые детали
+                    document.querySelectorAll('.agreement-details').forEach(detail => {
+                        detail.style.display = 'none';
+                    });
+                    
+                    detailsBlock.style.display = 'block';
+                }
+                
+                // Обновляем активный договор
+                agreementItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Обновляем URL без перезагрузки страницы
+                const url = new URL(window.location);
+                url.searchParams.set('agreement', agreementId);
+                window.history.pushState({}, '', url);
+                
+                // Обновляем панель портфелей
+                updatePortfoliosPanel(agreementId);
+            });
+        });
+        
+        // Обработка кнопок "Подробнее" для портфелей
+        const toggleButtons = document.querySelectorAll('.toggle-details');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const detailsBlock = document.getElementById(targetId);
+                
+                if (detailsBlock.style.display === 'block') {
+                    detailsBlock.style.display = 'none';
+                    this.textContent = 'Подробнее';
+                } else {
+                    detailsBlock.style.display = 'block';
+                    this.textContent = 'Скрыть';
+                }
+            });
+        });
+        
+        // Функция обновления панели портфелей
+        function updatePortfoliosPanel(agreementId) {
+            // Здесь можно добавить AJAX-запрос для обновления портфелей
+            // В данном примере просто перезагружаем страницу
+            window.location.href = `?agreement=${agreementId}`;
+        }
+        
+        // Устанавливаем активный договор при загрузке страницы
+        const currentAgreementId = new URLSearchParams(window.location.search).get('agreement');
+        if (currentAgreementId) {
+            const activeItem = document.querySelector(`.agreement-item[data-agreement-id="${currentAgreementId}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+                
+                // Открываем детали активного договора
+                const detailsBlock = document.getElementById(`details-${currentAgreementId}`);
+                if (detailsBlock) {
+                    detailsBlock.style.display = 'block';
+                }
+            }
+        }
+        
+        // Динамическое обновление имени портфеля в форме редактирования
+        const portfolioForm = document.getElementById('portfolio-form');
+        if (portfolioForm) {
+            const datePlacementField = document.querySelector('#id_date_placement');
+            const processTypeField = document.querySelector('#id_process_type');
+            const labelPreview = document.querySelector('#portfolio-label-preview');
+            
+            // Получаем данные договора
+            let creditor, agreementType;
+            
+            // Для нового портфеля берем из скрытых полей
+            if (document.querySelector('#agreement-creditor')) {
+                creditor = document.querySelector('#agreement-creditor').value;
+                agreementType = document.querySelector('#agreement-type').value;
+            } 
+            // Для существующего портфеля берем из контекста
+            else if (labelPreview) {
+                // Извлекаем данные из текущего имени
+                const currentLabel = labelPreview.textContent;
+                const parts = currentLabel.split('_');
+                if (parts.length >= 4) {
+                    creditor = parts[0];
+                    agreementType = parts[1];
+                }
+            }
+            
+            // Функция обновления имени портфеля
+            function updatePortfolioLabel() {
+                if (!datePlacementField || !processTypeField || !creditor || !agreementType) return;
+                
+                const datePlacement = datePlacementField.value ? 
+                    new Date(datePlacementField.value).toLocaleDateString('ru-RU') : '';
+                const processType = processTypeField.options[processTypeField.selectedIndex]?.text || '';
+                
+                const newLabel = `${creditor}_${agreementType}_${datePlacement}_${processType}`;
+                if (labelPreview) {
+                    labelPreview.textContent = newLabel;
+                }
+            }
+            
+            // Добавляем обработчики событий
+            if (datePlacementField) {
+                datePlacementField.addEventListener('change', updatePortfolioLabel);
+                datePlacementField.addEventListener('input', updatePortfolioLabel);
+            }
+            if (processTypeField) {
+                processTypeField.addEventListener('change', updatePortfolioLabel);
+            }
+            
+            // Инициализация при загрузке
+            updatePortfolioLabel();
+        }
+    });
+</script>
 {% endblock %}
