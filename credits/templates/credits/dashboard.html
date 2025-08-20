@@ -14,7 +14,7 @@
   <div class="agreements-panel">
     <div class="panel-header">
       <h3>Договоры</h3>
-      <a href="{% url 'deals:agreement-new' %}" class="btn btn-primary btn-sm">+ Новый</a>
+      <a href="{% url 'credits:agreement-new' %}" class="btn btn-primary btn-sm">+ Новый</a>
     </div>
     
     <div class="agreements-list">
@@ -34,8 +34,8 @@
           </div>
           <div class="agreement-actions">
             <a href="?agreement={{ a.id }}" class="view-btn">👁</a>
-            <a href="{% url 'deals:agreement-edit' a.id %}" class="edit-btn">✎</a>
-            <a href="{% url 'deals:agreement-delete' a.id %}" class="delete-btn">🗑</a>
+            <a href="{% url 'credits:agreement-edit' a.id %}" class="edit-btn">✎</a>
+            <a href="{% url 'credits:agreement-delete' a.id %}" class="delete-btn">🗑</a>
           </div>
         </div>
         
@@ -86,7 +86,7 @@
       <!-- Изменено: вместо номера договора отображаем код договора -->
       <h3>Портфели по договору {% if current_agreement %}({{ current_agreement.agreement_code }}){% else %}(не выбран){% endif %}</h3>
       {% if current_agreement %}
-      <a href="{% url 'deals:portfolio-new' current_agreement.id %}" class="btn btn-primary btn-sm">+ Портфель</a>
+      <a href="{% url 'credits:portfolio-new' current_agreement.id %}" class="btn btn-primary btn-sm">+ Портфель</a>
       {% endif %}
     </div>
     
@@ -97,8 +97,8 @@
         <div class="portfolio-header">
           <div class="portfolio-title">{{ p.label|default:"Без названия" }}</div>
           <div class="portfolio-actions">
-            <a href="{% url 'deals:portfolio-edit' p.id %}" class="edit-btn">✎</a>
-            <a href="{% url 'deals:portfolio-delete' p.id %}" class="delete-btn">🗑</a>
+            <a href="{% url 'credits:portfolio-edit' p.id %}" class="edit-btn">✎</a>
+            <a href="{% url 'credits:portfolio-delete' p.id %}" class="delete-btn">🗑</a>
           </div>
         </div>
         

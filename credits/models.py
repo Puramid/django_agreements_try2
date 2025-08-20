@@ -1,4 +1,4 @@
-# deals/models.py
+# credits/models.py
 from django.db import models
 from django.utils import timezone
 
@@ -20,7 +20,7 @@ class Creditor(models.Model):
     date_update = models.DateTimeField("Дата обновления", auto_now=True)
 
     class Meta:
-        app_label = "deals"
+        app_label = "credits"
         db_table = "credit_creditor"
         verbose_name_plural = "Кредитор"
         verbose_name = "кредитора"
@@ -123,7 +123,7 @@ class Agreement(models.Model):
     )
 
     class Meta:
-        app_label = "deals"
+        app_label = "credits"
         db_table = "agreement"
         verbose_name = "Договор"
         verbose_name_plural = "Договор"
@@ -205,7 +205,7 @@ class Portfolio(models.Model):
     )
 
     class Meta:
-        app_label = "deals"
+        app_label = "credits"
         db_table = "credit_portfolio"
         verbose_name = "портфель"
         verbose_name_plural = "Портфель"

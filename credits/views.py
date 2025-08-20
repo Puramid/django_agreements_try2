@@ -12,7 +12,7 @@ def dashboard_view(request):
     if not request.GET.get('agreement'):
         first = Agreement.objects.order_by('id').first()
         if first:
-            return redirect(f"{reverse('deals:dashboard')}?agreement={first.pk}")
+            return redirect(f"{reverse('credits:dashboard')}?agreement={first.pk}")
     
     # Get sorting parameters
     sort = request.GET.get('sort', 'id')
@@ -46,7 +46,7 @@ def dashboard_view(request):
         'rev_dir': 'desc' if direction == 'asc' else 'asc',
     }
     
-    return render(request, 'deals/dashboard.html', context)
+    return render(request, 'credits/dashboard.html', context)
 
 
 def agreement_create_view(request):
@@ -56,7 +56,7 @@ def agreement_create_view(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Договор создан.")
-            return redirect('deals:dashboard')
+            return redirect('credits:dashboard')
     else:
         form = AgreementForm()
     
@@ -64,7 +64,7 @@ def agreement_create_view(request):
         'form': form,
         'view': type('View', (), {'object': None})(),
     }
-    return render(request, 'deals/agreement_form.html', context)
+    return render(request, 'credits/agreement_form.html', context)
 
 
 def agreement_update_view(request, pk):
@@ -89,7 +89,7 @@ def agreement_update_view(request, pk):
             
             agreement.save()
             messages.success(request, f"Договор №{agreement.id} обновлен")
-            return redirect('deals:dashboard')
+            return redirect('credits:dashboard')
     else:
         # Set initial values for dates
         initial = {}
@@ -101,7 +101,7 @@ def agreement_update_view(request, pk):
         'form': form,
         'view': type('View', (), {'object': agreement})(),
     }
-    return render(request, 'deals/agreement_form.html', context)
+    return render(request, 'credits/agreement_form.html', context)
 
 
 def agreement_delete_view(request, pk):
@@ -112,12 +112,12 @@ def agreement_delete_view(request, pk):
         agreement_id = agreement.id
         agreement.delete()
         messages.success(request, f"Договор №{agreement_id} удалён.")
-        return redirect('deals:dashboard')
+        return redirect('credits:dashboard')
     
     context = {
         'object': agreement,
     }
-    return render(request, 'deals/generic_confirm_delete.html', context)
+    return render(request, 'credits/generic_confirm_delete.html', context)
 
 
 def portfolio_create_view(request, agreement_pk):
@@ -131,7 +131,7 @@ def portfolio_create_view(request, agreement_pk):
             portfolio.agreement = agreement
             portfolio.save()
             messages.success(request, "Портфель создан.")
-            return redirect(f"{reverse('deals:dashboard')}?agreement={agreement.pk}")
+            return redirect(f"{reverse('credits:dashboard')}?agreement={agreement.pk}")
     else:
         form = PortfolioForm(agreement=agreement)
     
@@ -140,7 +140,7 @@ def portfolio_create_view(request, agreement_pk):
         'agreement': agreement,
         'view': type('View', (), {'object': None, 'kwargs': {'agreement_pk': agreement_pk}})(),
     }
-    return render(request, 'deals/portfolio_form.html', context)
+    return render(request, 'credits/portfolio_form.html', context)
 
 
 def portfolio_update_view(request, pk):
@@ -168,7 +168,7 @@ def portfolio_update_view(request, pk):
             
             portfolio.save()
             messages.success(request, f"Портфель «{portfolio.label}» обновлен")
-            return redirect('deals:dashboard')
+            return redirect('credits:dashboard')
     else:
         # Set initial values for dates
         initial = {}
@@ -185,7 +185,7 @@ def portfolio_update_view(request, pk):
         'agreement': portfolio.agreement,
         'view': type('View', (), {'object': portfolio})(),
     }
-    return render(request, 'deals/portfolio_form.html', context)
+    return render(request, 'credits/portfolio_form.html', context)
 
 
 def portfolio_delete_view(request, pk):
@@ -197,9 +197,9 @@ def portfolio_delete_view(request, pk):
         agreement_pk = portfolio.agreement.pk
         portfolio.delete()
         messages.success(request, f"Портфель «{portfolio_label}» удалён.")
-        return redirect(f"{reverse('deals:dashboard')}?agreement={agreement_pk}")
+        return redirect(f"{reverse('credits:dashboard')}?agreement={agreement_pk}")
     
     context = {
         'object': portfolio,
     }
-    return render(request, 'deals/generic_confirm_delete.html', context)
+    return render(request, 'credits/generic_confirm_delete.html', context)

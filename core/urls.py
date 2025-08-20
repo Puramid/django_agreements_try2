@@ -3,5 +3,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('deals.urls')),   # пустой префикс
+    path('', include('credits.urls')),   # пустой префикс
 ]

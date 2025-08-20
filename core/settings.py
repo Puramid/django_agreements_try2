@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',  # Добавлено для форматирования чисел
-    'deals',
+    'credits.apps.CreditsConfig',
 ]
 
 MIDDLEWARE = [
